@@ -16,6 +16,6 @@ public class Int103project {
     public static void main(String[] args) {
         var app = new StartUI();
         app.start();
-       
+        System.out.println("Hello");
     }
 }
