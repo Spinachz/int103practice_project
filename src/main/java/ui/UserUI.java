@@ -1,10 +1,13 @@
 package ui;
 
 import domain.Playlist;
+import domain.Song;
 import domain.User;
 import exception.InvalidInputException;
 import exception.PlaylistNotFoundException;
+import exception.SongNotFoundException;
 import exception.UserNotFoundException;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Stream;
 import service.*;
@@ -12,15 +15,30 @@ import repository.memory.*;
 
 public class UserUI extends StartUI {
 
-    protected final UserService userService;
+    protected final UserandPlaylistService userService;
+    protected SongService songService;
 
-    public UserUI() {
-        /* if fromFile is true , load/save customer info into file */
-        userService = new UserService(new MemoryUserRepository(), new MemoryPlaylistRepository(), new MemorySongRepository());
+    public UserUI(SongService songService, int repoType) {
+        switch (repoType) {
+            case 1 -> {
+                userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
+            }
+            case 2 -> {
+                userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
+            }
+            case 3 -> {
+                userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
+            }
+            default -> {
+                userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
+            }
+        }
+        this.songService = songService;
     }
 
     public void startUserUI() {
         Scanner sc = new Scanner(System.in);
+        sc.useDelimiter("\n");
         userMainMenu(sc);
     }
 
@@ -45,7 +63,7 @@ public class UserUI extends StartUI {
                         System.out.println("NULL");
                     }
                     case 3 -> {
-                        start();
+                        return;
                     }
                 }
                 break;
@@ -123,14 +141,14 @@ public class UserUI extends StartUI {
                 userService.listAllPlaylistByUser(user.getId()).forEach(System.out::println);
             } catch (UserNotFoundException ex) {
                 System.out.println(ex.getMessage());
+                userMainMenu(sc);
             }
         }
         uiPlaylistMenu(sc, user, totalPlaylist);
     }
-    
+
     protected void uiPlaylistMenu(Scanner sc, User user, int totalPlaylist) {
-        String prompt = String.format("User id: %s\nUser name: %s\nYour total playlist: %d\nPlease select:\n1. Create playlist\n2. Delete playlist\n3. Select playlist\n4. Return to user menu\nPress [1|2|3|4]: "
-                                                                , user.getId(), user.getName(), totalPlaylist);
+        String prompt = "Please select:\n1. Create playlist\n2. Delete playlist\n3. Select playlist\n4. Return to user menu\nPress [1|2|3|4]: ";
         System.out.print(prompt);
         while (true) {
             String input = getInput(sc, prompt);
@@ -158,7 +176,7 @@ public class UserUI extends StartUI {
             }
         }
     }
-    
+
     private void createPlaylist(Scanner sc, User user) {
         Playlist playlist;
         String prompt = """
@@ -192,10 +210,10 @@ public class UserUI extends StartUI {
             String input = getInput(sc, prompt);
             if (input.equalsIgnoreCase("v")) {
                 uiViewPlaylist(sc, playlist, user);
-                return;
+                break;
             } else if (input.equalsIgnoreCase("q")) {
                 uiViewUser(sc, user);
-                return;
+                break;
             } else {
                 System.out.println("Invalid input, please try again");
                 System.out.println(prompt);
@@ -203,14 +221,12 @@ public class UserUI extends StartUI {
         }
     }
 
-
-
     private void uiViewPlaylist(Scanner sc, Playlist playlist, User user) {
         System.out.println("Playlist id: " + playlist.getPlaylistId());
         System.out.println("Playlist name: " + playlist.getPlaylistName());
         System.out.println("Total song: " + playlist.getCount());
         if (playlist.getCount() != 0) {
-            playlist.getAllSong().forEach(System.out::println);
+            playlist.getAllSongWithIndex();
         }
         String prompt = """
                         Please select:
@@ -226,7 +242,7 @@ public class UserUI extends StartUI {
                 int i = ans.nextInt();
                 switch (i) {
                     case 1 -> {
-                        addSong(sc, user, playlist);
+                        addSongMenu(sc, user, playlist);
                     }
                     case 2 -> {
                         deleteSong(sc, playlist, user);
@@ -257,6 +273,7 @@ public class UserUI extends StartUI {
                 uiViewUser(sc, user);
             } catch (UserNotFoundException | InvalidInputException | PlaylistNotFoundException ex) {
                 System.out.println(ex.getMessage());
+                userMainMenu(sc);
             }
         } else {
             uiViewUser(sc, user);
@@ -279,7 +296,7 @@ public class UserUI extends StartUI {
             System.out.print(prompt);
             while (true) {
                 String input = getInput(sc, prompt);
-                Playlist selectedPlaylist = userService.getPlaylist(input);
+                Playlist selectedPlaylist = userService.getPlaylistById(input);
                 if (selectedPlaylist != null) {
                     return selectedPlaylist;
                 } else if (input.equalsIgnoreCase("q")) {
@@ -302,6 +319,7 @@ public class UserUI extends StartUI {
             selectedPlaylist = selectPlaylist(sc, user);
         } catch (PlaylistNotFoundException | UserNotFoundException ex) {
             System.out.println(ex.getMessage());
+            userMainMenu(sc);
         }
         if (selectedPlaylist == null) {
             uiViewUser(sc, user);
@@ -310,10 +328,146 @@ public class UserUI extends StartUI {
         viewPlaylistOrQuit(sc, selectedPlaylist, user);
     }
 
-    private void addSong(Scanner sc, User user, Playlist playlist) {
+    private void addSongMenu(Scanner sc, User user, Playlist playlist) {
+        String prompt = """
+                        You are in adding song to your playlist process.
+                        Please select:
+                        1. list all song in our program
+                        2. search song by title
+                        3. search song by artist
+                        4. return to view playlist menu
+                        Press [1|2|3|4]:""";
+        System.out.println(prompt);
+        while (true) {
+            String input = getInput(sc, prompt);
+            Scanner ans = new Scanner(input);
+            if (ans.hasNext("[1|2|3|4]")) {
+                int i = ans.nextInt();
+                switch (i) {
+                    case 1 -> {
+                        songService.getSongs().forEach(System.out::println);
+                        addSongProcess(sc, user, playlist);
+                    }
+                    case 2 -> {
+                        searchSongByTitle(sc, user, playlist);
+                    }
+                    case 3 -> {
+                        searchSongByArtist(sc, user, playlist);
+                    }
+                    case 4 -> {
+                        uiViewPlaylist(sc, playlist, user);
+                    }
+                }
+                break;
+            } else {
+                System.out.println("Invalid input");
+                System.out.print(prompt);
+            }
+        }
+    }
+
+    private void searchSongByTitle(Scanner sc, User user, Playlist playlist) {
+        String prompt = "Please enter song title or [q] to get back to add song process: ";
+        System.out.print(prompt);
+        while (true) {
+            String input = getInput(sc, prompt);
+            if (input.equalsIgnoreCase("q")) {
+                addSongMenu(sc, user, playlist);
+                break;
+            } else {
+                long totalSongFound = songService.searhSongByTitle(input).count();
+                if (totalSongFound != 0) {
+                    songService.searhSongByTitle(input).forEach(System.out::println);
+                    addSongProcess(sc, user, playlist);
+                    break;
+                }
+                System.out.println("Can not find this song, pls try again");
+                System.out.print(prompt);
+            }
+        }
+    }
+
+    private void searchSongByArtist(Scanner sc, User user, Playlist playlist) {
+        String prompt = "Please enter artist name or [q] to get back to add song process: ";
+        System.out.print(prompt);
+        while (true) {
+            String input = getInput(sc, prompt);
+            if (input.equalsIgnoreCase("q")) {
+                addSongMenu(sc, user, playlist);
+                break;
+            } else {
+                long totalSongFound = songService.searhSongByArtist(input).count();
+                if (totalSongFound != 0) {
+                    songService.searhSongByArtist(input).forEach(System.out::println);
+                    addSongProcess(sc, user, playlist);
+                    break;
+                }
+                System.out.println("Can not find this artist, pls try again");
+                System.out.print(prompt);
+            }
+        }
+    }
+
+    private void addSongProcess(Scanner sc, User user, Playlist playlist) {
+        String prompt = "Please enter id of song that you want to add or [q] to get back to add song menu: ";
+        System.out.print(prompt);
+        while (true) {
+            String input = getInput(sc, prompt);
+            Song selectedSong = songService.getSongById(input);
+            if (selectedSong != null) {
+                Optional<Song> testExsistedSong = playlist.getAllSongs().filter(s -> s.getSongId().equals(selectedSong.getSongId())).findFirst();
+                if (!testExsistedSong.isEmpty()) {
+                    System.out.println("This song is already in your playlist.");
+                    addSongMenu(sc, user, playlist);
+                    break;
+                }
+                try {
+                    userService.addSong(selectedSong, playlist.getPlaylistId());
+                    System.out.println("Add song success!");
+                    uiViewPlaylist(sc, playlist, user);
+                    break;
+                } catch (PlaylistNotFoundException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            } else if (input.equalsIgnoreCase("q")) {
+                addSongMenu(sc, user, playlist);
+                break;
+            } else {
+                System.out.println("Can not fing this song, please try again.");
+                System.out.println(prompt);
+            }
+        }
     }
 
     private void deleteSong(Scanner sc, Playlist playlist, User user) {
+        int index;
+        System.out.println("Total song in this playlist: " + playlist.getCount());
+        if (playlist.getCount() != 0) {
+            playlist.getAllSongWithIndex();
+        }
+        String prompt = "Please enter number of song that you want to delete or [q] to get back to view playlist menu: ";
+        System.out.print(prompt);
+        while (true) {
+            String input = getInput(sc, prompt);
+            Scanner ans = new Scanner(input);
+            if (ans.hasNextInt()) {
+                try {
+                    index = ans.nextInt() - 1;
+                    userService.removeSong(index, playlist.getPlaylistId());
+                    System.out.println("Remove song success!");
+                    uiViewPlaylist(sc, playlist, user);
+                    break;
+                } catch (SongNotFoundException | PlaylistNotFoundException | IndexOutOfBoundsException ex) {
+                    System.out.println(ex.getMessage());
+                    System.out.print(prompt);
+                }
+            } else if (ans.hasNext("[q|Q]")) {
+                uiViewPlaylist(sc, playlist, user);
+                break;
+            } else {
+                System.out.println("Invalid input, please try again");
+                System.out.print(prompt);
+            }
+        }
     }
-
 }

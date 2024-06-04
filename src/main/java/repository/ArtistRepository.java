@@ -16,6 +16,6 @@ import java.util.stream.Stream;
 public interface ArtistRepository {
     public Artist retrieve(String artistId);
     public Artist create(String artistName) throws InvalidInputException;
-    public boolean update(Artist artist)throws ArtistNotFoundException;
+    public boolean update(Artist artist)throws ArtistNotFoundException; 
     public Stream<Artist> stream();
 }

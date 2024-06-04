@@ -9,22 +9,21 @@ import exception.*;
 import java.util.stream.Stream;
 import repository.PlaylistRepository;
 import repository.UserRepository;
-import repository.SongRepository;
 
 /**
  *
  * @author User
  */
-public class UserService {
+public class UserandPlaylistService {
 
     private final UserRepository userRepo;
     private final PlaylistRepository playlistRepo;
-    protected final SongRepository songRepo;
+    protected final SongService songService;
 
-    public UserService(UserRepository userRepo, PlaylistRepository playlistRepo, SongRepository songRepo) {
+    public UserandPlaylistService(UserRepository userRepo, PlaylistRepository playlistRepo, SongService songService) {
         this.userRepo = userRepo;
         this.playlistRepo = playlistRepo;
-        this.songRepo = songRepo;
+        this.songService = songService;
     }
 
     public User signUpUser(String userName) throws InvalidInputException {
@@ -41,6 +40,7 @@ public class UserService {
         return true;
     }
 
+    //renameplaylist
     public Playlist createPlaylist(String userId, String playlistName) throws UserNotFoundException, InvalidInputException {
         var user = userRepo.retrieve(userId);
         if (user == null) {
@@ -63,7 +63,7 @@ public class UserService {
         }
         return playlistRepo.stream().filter(pl -> pl.getOwner().getId().equals(userId));
     }
-    
+
     public long countAllPlaylistById(String userId) throws UserNotFoundException {
         if (userId == null || userRepo.retrieve(userId) == null) {
             throw new UserNotFoundException("Can not find this user, please try again.");
@@ -76,11 +76,12 @@ public class UserService {
         if (playlist == null) {
             throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
         }
+        playlist.addSong(song);
         playlistRepo.update(playlist);
-        return playlist.addSong(song);
+        return song;
     }
 
-    public Song removeSong(int index, String playlistId) throws PlaylistNotFoundException, SongNotFoundException {
+    public Song removeSong(int index, String playlistId) throws PlaylistNotFoundException, SongNotFoundException, IndexOutOfBoundsException {
         var playlist = playlistRepo.retrieve(playlistId);
         if (playlist == null) {
             throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
@@ -89,24 +90,16 @@ public class UserService {
         if (song == null) {
             throw new SongNotFoundException("Can not find this song, please try again.");
         }
-        playlist.removeSong(index);
+        playlist.removeSong(song);
         playlistRepo.update(playlist);
         return song;
     }
 
-    public Stream searhSongByTitle(String title) {
-        return songRepo.stream().filter(s -> s.getTitle().equals(title));
-    }
-
-    public Stream searhSongByArtist(String artistName) {
-        return songRepo.stream().filter(s -> s.getArtist().getName().equals(artistName));
-    }
-
-    public User getUser(String userId) {
+    public User getUserById(String userId) {
         return userRepo.retrieve(userId);
     }
-    
-        public Playlist getPlaylist(String playlistId) {
+
+    public Playlist getPlaylistById(String playlistId) {
         return playlistRepo.retrieve(playlistId);
     }
 

@@ -22,14 +22,14 @@ public class Playlist implements Comparable<Playlist>, Serializable {
     private int count;
 
     public Playlist(User owner, String playlistId, String playlistName) throws InvalidInputException {
-        if(playlistId == null || playlistId.isBlank() || playlistName == null || playlistName.isBlank()){
+        if (playlistId == null || playlistId.isBlank() || playlistName == null || playlistName.isBlank()) {
             throw new InvalidInputException();
         }
         this.owner = owner;
         this.playlistId = playlistId;
         this.playlistName = playlistName;
         this.songs = new ArrayList<>();
-        this.count = 0;
+        this.count = songs.size();
     }
 
     public String getPlaylistId() {
@@ -45,7 +45,7 @@ public class Playlist implements Comparable<Playlist>, Serializable {
     }
 
     public void rename(String playlistName) throws InvalidInputException {
-        if(playlistName == null || playlistName.isBlank()){
+        if (playlistName == null || playlistName.isBlank()) {
             throw new InvalidInputException();
         }
         this.playlistName = playlistName;
@@ -64,29 +64,32 @@ public class Playlist implements Comparable<Playlist>, Serializable {
             return null;
         }
     }
-    
-    public void removeSong(int index) throws SongNotFoundException{
-        if (index < 0 || index > count){
-            throw new SongNotFoundException("Song not found in index: " + index);
-        }else{
-            songs.remove(index);
-        }
+
+    public void removeSong(Song song) {
+        songs.remove(song);
+        count--;
     }
-    
-    public Song getSongByIndex(int index) throws SongNotFoundException{
-        if (index < 0 || index > count){
-            throw new SongNotFoundException();
-        }else{
+
+    public Song getSongByIndex(int index) throws IndexOutOfBoundsException {
+        if (index < 0 || index > count) {
+            throw new IndexOutOfBoundsException("Can not find song number: " + (index + 1));
+        } else {
             return songs.get(index);
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Playlist id %s(name: %s, total song: %d, created by %s)", playlistId ,playlistName, count, owner.getName());
+        return String.format("Playlist id %s(name: %s, total song: %d, created by %s)", playlistId, playlistName, count, owner.getName());
+    }
+
+    public void getAllSongWithIndex() {
+        for (int i = 0; i < count; i++) {
+            System.out.println((i + 1) + ". " + songs.get(i).toString());
+        }
     }
     
-    public Stream getAllSong(){
+    public Stream<Song> getAllSongs(){
         return songs.stream();
     }
 

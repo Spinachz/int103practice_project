@@ -12,8 +12,8 @@ import exception.SongNotFoundException;
 import java.util.Scanner;
 import java.util.stream.Stream;
 import repository.memory.MemoryArtistRepository;
-import repository.memory.MemorySongRepository;
 import service.ArtistService;
+import service.SongService;
 
 /**
  *
@@ -22,13 +22,29 @@ import service.ArtistService;
 public class ArtistUI extends StartUI {
 
     protected final ArtistService artistService;
+    protected SongService songService;
 
-    protected ArtistUI() {
-        artistService = new ArtistService(new MemoryArtistRepository(), new MemorySongRepository());
+    public ArtistUI(SongService songService, int repoType) {
+        switch (repoType) {
+            case 1 -> {
+                artistService = new ArtistService(new MemoryArtistRepository(), songService);
+            }
+            case 2 -> {
+                artistService = new ArtistService(new MemoryArtistRepository(), songService); //file
+            }
+            case 3 -> {
+                artistService = new ArtistService(new MemoryArtistRepository(), songService); //database
+            }
+            default -> {
+                artistService = new ArtistService(new MemoryArtistRepository(), songService);
+            }
+        }
+        this.songService = songService;
     }
 
     public void startArtistUI() {
         Scanner sc = new Scanner(System.in);
+        sc.useDelimiter("\n");
         artistMainMenu(sc);
     }
 
@@ -53,7 +69,7 @@ public class ArtistUI extends StartUI {
                         System.out.println("NULL");
                     }
                     case 3 -> {
-                        start();
+                        return;
                     }
                 }
                 break;
@@ -92,7 +108,7 @@ public class ArtistUI extends StartUI {
             System.out.println("Your artist name is: " + artistName);
         } catch (InvalidInputException ex) {
             System.out.println(ex.getMessage());
-            artistMainMenu(sc);
+            return;
         }
         viewAccountOrQuit(sc, artist);
     }
@@ -116,7 +132,7 @@ public class ArtistUI extends StartUI {
     }
 
     protected void uiViewArtist(Scanner sc, Artist artist) {
-        System.out.println("Yoy are in view artist page");
+        System.out.println("You are in view artist page");
         System.out.println("Artist id: " + artist.getId());
         System.out.println("Artist name:" + artist.getName());
         int totalSong = 0;
@@ -131,15 +147,14 @@ public class ArtistUI extends StartUI {
                 artistService.listAllSongByArtist(artist.getId()).forEach(System.out::println);
             } catch (ArtistNotFoundException ex) {
                 System.out.println(ex.getMessage());
+                return;
             }
         }
-        uiSongMenu(sc, artist,totalSong);
+        uiSongMenu(sc, artist, totalSong);
     }
 
-    private void uiSongMenu(Scanner sc, Artist artist , int totalSong) {
-        String prompt = String.format("Artist id: %s\nArtist name: %s\nYour total song: %d\nPlease select:\n1. Publish new song\n2. Select song\n3. Return to artist main menu\nPress [1|2|3]: "
-                                                                , artist.getId(), artist.getName(), totalSong);
-        
+    private void uiSongMenu(Scanner sc, Artist artist, int totalSong) {
+        String prompt = "Please select:\n1. Publish new song\n2. Select song\n3. Return to artist main menu\nPress [1|2|3]: ";
         System.out.print(prompt);
         while (true) {
             String input = getInput(sc, prompt);
@@ -184,7 +199,7 @@ public class ArtistUI extends StartUI {
                     viewSongOrQuit(sc, song, artist);
                 } catch (ArtistNotFoundException | InvalidInputException ex) {
                     System.out.println(ex.getMessage());
-                    uiViewArtist(sc, artist);
+                    return;
                 }
             }
             break;
@@ -198,10 +213,10 @@ public class ArtistUI extends StartUI {
             String input = getInput(sc, prompt);
             if (input.equalsIgnoreCase("v")) {
                 uiViewSong(sc, song, artist);
-                return;
+                break;
             } else if (input.equalsIgnoreCase("q")) {
                 uiViewArtist(sc, artist);
-                return;
+                break;
             } else {
                 System.out.println("Invalid input, please try again");
                 System.out.println(prompt);
@@ -273,6 +288,7 @@ public class ArtistUI extends StartUI {
                     break;
                 } catch (SongNotFoundException | ArtistNotFoundException ex) {
                     System.out.println(ex.getMessage());
+                    uiViewArtist(sc, artist);
                 }
                 break;
             } else if (input.equalsIgnoreCase("n")) {
@@ -291,6 +307,7 @@ public class ArtistUI extends StartUI {
             songs = artistService.listAllSongByArtist(artist.getId());
         } catch (ArtistNotFoundException ex) {
             System.out.println(ex.getMessage());
+            return null;
         }
         if (artistService.countAllSongById(artist.getId()) != 0) {
             songs.forEach(System.out::println);
@@ -301,7 +318,7 @@ public class ArtistUI extends StartUI {
             System.out.print(prompt);
             while (true) {
                 String input = getInput(sc, prompt);
-                Song selectedSong = artistService.getSong(input);
+                Song selectedSong = songService.getSongById(input);
                 if (selectedSong != null) {
                     return selectedSong;
                 } else if (input.equalsIgnoreCase("q")) {
@@ -324,6 +341,7 @@ public class ArtistUI extends StartUI {
             selectedSong = selectSong(sc, artist);
         } catch (ArtistNotFoundException ex) {
             System.out.println(ex.getMessage());
+            return;
         }
         if (selectedSong == null) {
             uiViewArtist(sc, artist);
