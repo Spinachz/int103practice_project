@@ -59,7 +59,7 @@ public class ArtistService {
         return songService.getSongs().filter(s -> s.getArtist().equals(artistRepo.retrieve(artistId)));
     }
 
-    public User getArtistById(String artistId) {
+    public Artist getArtistById(String artistId) {
         return artistRepo.retrieve(artistId);
     }
 
@@ -67,5 +67,8 @@ public class ArtistService {
         return artistRepo.stream();
     }
     
+    public long countAllArtist(){
+        return artistRepo.stream().count();
+    }
 
 }
