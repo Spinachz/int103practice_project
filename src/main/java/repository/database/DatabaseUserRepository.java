@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 public class DatabaseUserRepository implements UserRepository {
 
     private long nextUserId = 1;
-    String url = "jdbc:mysql://127.0.0.1:3306/";
+    String url = "jdbc:mysql://localhost:3306/";
 
     private final Map<String, User> repo;
 
