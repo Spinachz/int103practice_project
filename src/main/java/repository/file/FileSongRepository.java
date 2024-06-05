@@ -25,8 +25,13 @@ public class FileSongRepository implements SongRepository {
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
                 while (obi.read() != -1) {
-                    this.nextSongId = obi.readLong();
-                    this.repo = (Map<String, Song>) obi.readObject();
+                    try {
+                        this.nextSongId = obi.readLong();
+                        this.repo = (Map<String, Song>) obi.readObject();
+                    }
+                    catch (EOFException e) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

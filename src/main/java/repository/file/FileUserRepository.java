@@ -22,9 +22,14 @@ public class FileUserRepository implements UserRepository{
             try ( FileInputStream fi = new FileInputStream(f);
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
-                while (obi.available() != 0) {
-                    this.nextUserId = obi.readLong();
-                    this.repo = (Map<String, User>) obi.readObject();
+                while (obi.read() != -1) {
+                    try {
+                        this.nextUserId = obi.readLong();
+                        this.repo = (Map<String, User>) obi.readObject();
+                    }
+                    catch (EOFException e) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
