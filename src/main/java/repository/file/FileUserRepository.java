@@ -1,5 +1,6 @@
 package repository.file;
 
+import domain.Artist;
 import domain.User;
 import java.io.*;
 import java.util.Map;
@@ -22,8 +23,8 @@ public class FileUserRepository implements UserRepository{
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
                 while (obi.available() != 0) {
-                    obi.readLong();
-                    obi.readObject();
+                    this.nextUserId = obi.readLong();
+                    this.repo = (Map<String, User>) obi.readObject();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -46,14 +47,7 @@ public class FileUserRepository implements UserRepository{
         var user = new User(id,userName);
         repo.put(id, user);
         ++nextUserId;
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
-            obi.writeLong(nextUserId);
-            obi.writeObject(repo);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        saveRepo();
         return user;
     }
 
@@ -61,6 +55,16 @@ public class FileUserRepository implements UserRepository{
     public boolean update(User user) throws UserNotFoundException {
         if (user == null) throw new UserNotFoundException();
         repo.replace(user.getId(), user);
+        saveRepo();
+        return true;
+    }
+
+    @Override
+    public Stream<User> stream() {
+        return repo.values().stream();
+    }
+
+    private void saveRepo() {
         try ( FileOutputStream fi = new FileOutputStream(f);
               BufferedOutputStream bfi = new BufferedOutputStream(fi);
               ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
@@ -69,11 +73,5 @@ public class FileUserRepository implements UserRepository{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return true;
-    }
-
-    @Override
-    public Stream<User> stream() {
-        return repo.values().stream();
     }
 }
