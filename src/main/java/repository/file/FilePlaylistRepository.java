@@ -1,6 +1,5 @@
 package repository.file;
 
-import domain.Artist;
 import domain.Playlist;
 import domain.User;
 import java.io.*;

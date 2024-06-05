@@ -1,6 +1,5 @@
 package repository.file;
 
-import domain.Playlist;
 import domain.Artist;
 import java.io.*;
 import java.util.Map;

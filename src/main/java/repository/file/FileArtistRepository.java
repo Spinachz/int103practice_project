@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import domain.User;
 import exception.ArtistNotFoundException;
 import exception.InvalidInputException;
 import repository.ArtistRepository;
