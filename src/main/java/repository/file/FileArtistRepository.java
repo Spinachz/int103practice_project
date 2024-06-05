@@ -28,6 +28,8 @@ public class FileArtistRepository implements ArtistRepository{
                         this.repo = (Map<String, Artist>) obi.readObject();
                     }
                     catch (EOFException e) {
+                        this.nextArtistId = 1;
+                        this.repo = new TreeMap<>();
                         break;
                     }
                 }

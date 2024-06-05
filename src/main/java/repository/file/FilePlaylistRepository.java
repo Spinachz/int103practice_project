@@ -23,12 +23,15 @@ public class FilePlaylistRepository implements PlaylistRepository{
         if (f.exists()) {
             try ( FileInputStream fi = new FileInputStream(f);
                   BufferedInputStream bfi = new BufferedInputStream(fi);
-                  ObjectInputStream obi = new ObjectInputStream(bfi);) {                while (obi.read() != -1) {
+                  ObjectInputStream obi = new ObjectInputStream(bfi);) {
+                while (obi.read() != -1) {
                 try {
                     this.nextPlaylistId = obi.readLong();
                     this.repo = (Map<String, Playlist>) obi.readObject();
                 }
                 catch (EOFException e) {
+                    this.nextPlaylistId = 1;
+                    this.repo = new TreeMap<>();
                     break;
                 }
             }

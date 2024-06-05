@@ -28,6 +28,8 @@ public class FileUserRepository implements UserRepository{
                         this.repo = (Map<String, User>) obi.readObject();
                     }
                     catch (EOFException e) {
+                        this.nextUserId = 1;
+                        this.repo = new TreeMap<>();
                         break;
                     }
                 }

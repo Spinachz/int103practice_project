@@ -30,6 +30,8 @@ public class FileSongRepository implements SongRepository {
                         this.repo = (Map<String, Song>) obi.readObject();
                     }
                     catch (EOFException e) {
+                        this.nextSongId = 1;
+                        this.repo = new TreeMap<>();
                         break;
                     }
                 }
