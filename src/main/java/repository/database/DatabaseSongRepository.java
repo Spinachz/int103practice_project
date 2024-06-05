@@ -10,7 +10,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class DatabaseSongRepository implements SongRepository {
-
     private long nextSongId = 1;
     String url = "jdbc:mysql://localhost:3306/AppProjectDB";
 
