@@ -32,7 +32,7 @@ public class MemoryArtistRepository implements ArtistRepository {
 
     @Override
     public Artist create(String artistName) throws InvalidInputException {
-        var id = String.format("A%011d", nextArtistId);
+        var id = String.format("A%011d", nextArtistId); 
         if (repo.containsKey(id)) {
             throw new InvalidInputException("Id already exsisted, please try again.");
         }
