@@ -10,6 +10,8 @@ import exception.UserNotFoundException;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Stream;
+import repository.file.FilePlaylistRepository;
+import repository.file.FileUserRepository;
 import service.*;
 import repository.memory.*;
 
@@ -24,7 +26,7 @@ public class UserUI extends StartUI {
                 userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
             }
             case 2 -> {
-                userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
+                userService = new UserandPlaylistService(new FileUserRepository(), new FilePlaylistRepository(), songService);
             }
             case 3 -> {
                 userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
@@ -46,7 +48,7 @@ public class UserUI extends StartUI {
         String prompt = """
                     Hello, you are in normal user mode. Please select:
                         1. Create account
-                        2. NULL
+                        2. Choose exsisted account
                         3. Return to main menu
                     Press [1|2|3]: """;
         System.out.print(prompt);
@@ -60,7 +62,7 @@ public class UserUI extends StartUI {
                         uiNewUser(sc);
                     }
                     case 2 -> {
-                        System.out.println("NULL");
+                        ChooseUserMenu(sc);
                     }
                     case 3 -> {
                         return;
@@ -106,6 +108,33 @@ public class UserUI extends StartUI {
         }
         viewAccountOrQuit(sc, user);
     }
+
+    private void ChooseUserMenu(Scanner sc) {
+        System.out.println("Total exsisted artist account: " + userService.countUsers());
+        if (userService.countUsers() != 0) {
+            userService.getAllUsers().forEach(System.out::println);
+        }
+        String prompt = """
+                        You are in selecting account process.
+                        Please type user id that shown above or press[q] to return to artist main menu: 
+                        """;
+        System.out.print(prompt);
+        while (true) {
+            String input = getInput(sc, prompt);
+            User selectedUser = userService.getUserById(input);
+            if (selectedUser != null) {
+                viewAccountOrQuit(sc, selectedUser);
+                break;
+            } else if (input.equalsIgnoreCase("q")) {
+                userMainMenu(sc);
+                break;
+            } else {
+                System.out.println("Can not find this account, please try again.");
+                System.out.print(prompt);
+            }
+        }
+    }
+    
 
     protected void viewAccountOrQuit(Scanner sc, User user) { //can be merge with signUpProcess()
         String prompt = "Please press [v] to view your account or [q] to return to the user menu: ";
@@ -402,7 +431,7 @@ public class UserUI extends StartUI {
                     addSongProcess(sc, user, playlist);
                     break;
                 }
-                System.out.println("Can not find this artist, pls try again");
+                System.out.println("Can not find songs by this artist, pls try again");
                 System.out.print(prompt);
             }
         }

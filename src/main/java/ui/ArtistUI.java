@@ -11,6 +11,7 @@ import exception.ArtistNotFoundException;
 import exception.SongNotFoundException;
 import java.util.Scanner;
 import java.util.stream.Stream;
+import repository.file.FileArtistRepository;
 import repository.memory.MemoryArtistRepository;
 import service.ArtistService;
 import service.SongService;
@@ -30,7 +31,7 @@ public class ArtistUI extends StartUI {
                 artistService = new ArtistService(new MemoryArtistRepository(), songService);
             }
             case 2 -> {
-                artistService = new ArtistService(new MemoryArtistRepository(), songService); //file
+                artistService = new ArtistService(new FileArtistRepository(), songService); //file
             }
             case 3 -> {
                 artistService = new ArtistService(new MemoryArtistRepository(), songService); //database
@@ -52,7 +53,7 @@ public class ArtistUI extends StartUI {
         String prompt = """
                     Hello, you are in artist mode. Please select:
                         1. Create account
-                        2. NULL
+                        2. Choose exsisted account
                         3. Return to main menu
                     Press [1|2|3]: """;
         System.out.print(prompt);
@@ -66,7 +67,7 @@ public class ArtistUI extends StartUI {
                         uiNewArtist(sc);
                     }
                     case 2 -> {
-                        System.out.println("NULL");
+                        ChooseArtistMenu(sc);
                     }
                     case 3 -> {
                         return;
@@ -111,6 +112,30 @@ public class ArtistUI extends StartUI {
             return;
         }
         viewAccountOrQuit(sc, artist);
+    }
+
+    private void ChooseArtistMenu(Scanner sc) {
+        System.out.println("Total exsisted artist account: " + artistService.countAllArtist());
+        if(artistService.countAllArtist() != 0) artistService.getArtists().forEach(System.out::println);
+        String prompt = """
+                        You are in selecting account process.
+                        Please type artist id that shown above or press[q] to return to artist main menu: 
+                        """;
+        System.out.print(prompt);
+        while (true) {
+            String input = getInput(sc, prompt);
+            Artist selectedArtist = artistService.getArtistById(input);
+            if(selectedArtist != null){
+                viewAccountOrQuit(sc, selectedArtist);
+                break;
+            }else if(input.equalsIgnoreCase("q")){
+                artistMainMenu(sc);
+                break;
+            }else{
+                System.out.println("Can not find this account, please try again.");
+                System.out.print(prompt);
+            }
+        }
     }
 
     protected void viewAccountOrQuit(Scanner sc, Artist artist) { //can be merge with signUpProcess()
