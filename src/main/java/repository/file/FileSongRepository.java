@@ -1,6 +1,5 @@
 package repository.file;
 
-import domain.Playlist;
 import domain.Artist;
 import java.io.*;
 import java.util.Map;
@@ -25,8 +24,15 @@ public class FileSongRepository implements SongRepository {
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
                 while (obi.read() != -1) {
-                    obi.readLong();
-                    obi.readObject();
+                    try {
+                        this.nextSongId = obi.readLong();
+                        this.repo = (Map<String, Song>) obi.readObject();
+                    }
+                    catch (EOFException e) {
+                        this.nextSongId = 1;
+                        this.repo = new TreeMap<>();
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -54,14 +60,7 @@ public class FileSongRepository implements SongRepository {
         var song = new Song(id, title, artist);
         repo.put(id, song);
         ++nextSongId;
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
-            obi.writeLong(nextSongId);
-            obi.writeObject(repo);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        saveRepo();
         return song;
     }
 
@@ -73,14 +72,7 @@ public class FileSongRepository implements SongRepository {
         if (song == null) {
             throw new SongNotFoundException("Can not find this song, please try again.");
         }
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
-            obi.writeLong(nextSongId);
-            obi.writeObject(repo);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        saveRepo();
         return repo.remove(song.getSongId(), song);
     }
 
@@ -90,6 +82,16 @@ public class FileSongRepository implements SongRepository {
             throw new SongNotFoundException("Can not find this song, please try again.");
         }
         repo.replace(song.getSongId(), song);
+        saveRepo();
+        return true;
+    }
+
+    @Override
+    public Stream<Song> stream() {
+        return repo.values().stream();
+    }
+
+    private void saveRepo() {
         try ( FileOutputStream fi = new FileOutputStream(f);
               BufferedOutputStream bfi = new BufferedOutputStream(fi);
               ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
@@ -98,11 +100,5 @@ public class FileSongRepository implements SongRepository {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return true;
-    }
-
-    @Override
-    public Stream<Song> stream() {
-        return repo.values().stream();
     }
 }

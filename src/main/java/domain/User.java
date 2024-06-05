@@ -41,7 +41,7 @@ public class User implements Comparable<User>, Serializable {
 
     @Override
     public String toString() {
-        return String.format("User(d: %s, name: %s)", userId, userName);
+        return String.format("User(Id: %s, name: %s)", userId, userName);
     }
 
     @Override

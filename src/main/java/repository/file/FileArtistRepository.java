@@ -14,7 +14,7 @@ public class FileArtistRepository implements ArtistRepository{
     private String filename = "artist.dat";
     private long nextArtistId;
     private Map<String, Artist> repo;
-    private File f = new File( filename);
+    private File f = new File(filename);
 
     public FileArtistRepository() {
         if (f.exists()) {
@@ -22,10 +22,18 @@ public class FileArtistRepository implements ArtistRepository{
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
                 while (obi.read() != -1) {
-                    obi.readLong();
-                    obi.readObject();
+                    try {
+                        this.nextArtistId = obi.readLong();
+                        this.repo = (Map<String, Artist>) obi.readObject();
+                    }
+                    catch (EOFException e) {
+                        this.nextArtistId = 1;
+                        this.repo = new TreeMap<>();
+                        break;
+                    }
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
@@ -48,14 +56,7 @@ public class FileArtistRepository implements ArtistRepository{
         Artist artist = new Artist(id, artistName);
         repo.put(id, artist);
         ++nextArtistId;
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
-            obi.writeLong(nextArtistId);
-            obi.writeObject(repo);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        saveRepo();
         return artist;
     }
 
@@ -65,6 +66,16 @@ public class FileArtistRepository implements ArtistRepository{
             throw new ArtistNotFoundException("Can not find this artist, please try again.");
         }
         repo.replace(artist.getId(), artist);
+        saveRepo();
+        return true;
+    }
+
+    @Override
+    public Stream<Artist> stream() {
+        return repo.values().stream();
+    }
+
+    private void saveRepo() {
         try ( FileOutputStream fi = new FileOutputStream(f);
               BufferedOutputStream bfi = new BufferedOutputStream(fi);
               ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
@@ -73,11 +84,5 @@ public class FileArtistRepository implements ArtistRepository{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return true;
-    }
-
-    @Override
-    public Stream<Artist> stream() {
-        return repo.values().stream();
     }
 }

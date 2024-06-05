@@ -24,9 +24,16 @@ public class FilePlaylistRepository implements PlaylistRepository{
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
                 while (obi.read() != -1) {
-                    obi.readLong();
-                    obi.readObject();
+                try {
+                    this.nextPlaylistId = obi.readLong();
+                    this.repo = (Map<String, Playlist>) obi.readObject();
                 }
+                catch (EOFException e) {
+                    this.nextPlaylistId = 1;
+                    this.repo = new TreeMap<>();
+                    break;
+                }
+            }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -51,18 +58,9 @@ public class FilePlaylistRepository implements PlaylistRepository{
             return null;
         }
         Playlist playlist = new Playlist(owner, id, playlistName);
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
-            obi.writeLong(nextPlaylistId);
-            obi.writeObject(repo);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
         repo.put(id, playlist);
         ++nextPlaylistId;
-        
+        saveRepo();
         return playlist;
     }
 
@@ -74,14 +72,7 @@ public class FilePlaylistRepository implements PlaylistRepository{
         if (playlist == null) {
             throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
         }
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
-            obi.writeLong(nextPlaylistId);
-            obi.writeObject(repo);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        saveRepo();
         return repo.remove(playlist.getPlaylistId(), playlist);
     }
 
@@ -91,6 +82,16 @@ public class FilePlaylistRepository implements PlaylistRepository{
             throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
         }
         repo.replace(playlist.getPlaylistId(), playlist);
+        saveRepo();
+        return true;
+    }
+
+    @Override
+    public Stream<Playlist> stream() {
+        return repo.values().stream();
+    }
+
+    private void saveRepo() {
         try ( FileOutputStream fi = new FileOutputStream(f);
               BufferedOutputStream bfi = new BufferedOutputStream(fi);
               ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
@@ -99,11 +100,5 @@ public class FilePlaylistRepository implements PlaylistRepository{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return true;
-    }
-
-    @Override
-    public Stream<Playlist> stream() {
-        return repo.values().stream();
     }
 }
