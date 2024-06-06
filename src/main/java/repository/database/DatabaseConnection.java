@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 
 public class DatabaseConnection {
     public static Connection connect() {
-        String url = "jdbc:mysql://localhost:3306/AppProjectDB";
+        String url = "jdbc:mysql://localhost:3306/appprojectdb";
         String username = "root";
         String password = "Butter#2371";
         Connection connect = null;

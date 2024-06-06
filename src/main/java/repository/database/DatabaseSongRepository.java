@@ -15,25 +15,17 @@ public class DatabaseSongRepository implements SongRepository {
     private long nextSongId = 1;
     Connection connect = DatabaseConnection.connect();
     private final Map<String, Song> repo;
-    ArtistRepository artistRepository;
 
     public DatabaseSongRepository() {
         this.repo = new TreeMap<>();
-        this.artistRepository = new DatabaseArtistRepository();
         if (repo.isEmpty()) {
             var id = String.format("S%011d", nextSongId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT s.songId, s.title, s.artistId, " +
-                    "a.artistName FROM Song s join Artist a WHERE s.artistId = a.artistId")) {
+            try (PreparedStatement stmt = connect.prepareStatement("SELECT s.songId, s.title, s.artistId, a.artistName FROM Song s join Artist a WHERE s.artistId = a.artistId")) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-//                    Artist artist = artistRepository.retrieve(rs.getString(3));
-                    String artistId = rs.getString(3);
-                    String artistName = rs.getString(4);
-                    String songId = rs.getString(1);
-                    String title = rs.getString("title");
-                    Artist artist = new Artist(artistId, artistName);
-                    Song song = new Song(songId, title, artist);
-                    repo.put(id, song);
+                    Artist artist = new Artist(rs.getString(3), rs.getString(4));
+                    Song song = new Song(rs.getString(1), rs.getString(2), artist);
+                    repo.put(rs.getString("songId"), song);
                     ++nextSongId;
                 }
             } catch (Exception e) {
@@ -57,7 +49,7 @@ public class DatabaseSongRepository implements SongRepository {
             stmt.setString(2, songName);
             stmt.setString(3, artist.getId());
             stmt.executeUpdate();
-            repo.put(id, song);
+            repo.put(song.getSongId(), song);
             ++nextSongId;
             return song;
         } catch (Exception e) {

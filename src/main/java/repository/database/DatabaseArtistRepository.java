@@ -19,11 +19,11 @@ public class DatabaseArtistRepository implements ArtistRepository {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
             var id = String.format("A%011d", nextArtistId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM Artist")) {
+            try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM artist")) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-                    Artist artist = new Artist(rs.getString("artistId"), rs.getString("artistName"));
-                    repo.put(id, artist);
+                    Artist artist = new Artist(rs.getString(1), rs.getString(2));
+                    repo.put(rs.getString("artistId"), artist);
                     ++nextArtistId;
                 }
             } catch (Exception e) {
@@ -42,11 +42,11 @@ public class DatabaseArtistRepository implements ArtistRepository {
         var id = String.format("A%011d", nextArtistId);
         if (repo.containsKey(id)) throw new InvalidInputException("Id already exsisted, please try again.");
         Artist artist = new Artist(id, artistName);
-        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO Artist(artistId, artistName) values (?, ?)")) {
+        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO artist (artistId, artistName) values (?, ?)")) {
             stmt.setString(1, id);
             stmt.setString(2, artistName);
             stmt.executeUpdate();
-            repo.put(id, artist);
+            repo.put(artist.getId(), artist);
             ++nextArtistId;
             return artist;
         } catch (Exception e) {
@@ -58,7 +58,7 @@ public class DatabaseArtistRepository implements ArtistRepository {
     @Override
     public boolean update(Artist artist) throws ArtistNotFoundException {
         if (artist == null) throw new ArtistNotFoundException("Can not find this artist, please try again.");
-        try (PreparedStatement stmt = connect.prepareStatement("UPDATE Artist SET artistName=?")) {
+        try (PreparedStatement stmt = connect.prepareStatement("UPDATE artist SET artistName=?")) {
             stmt.setString(1, artist.getName());
             stmt.executeUpdate();
             repo.replace(artist.getId(), artist);

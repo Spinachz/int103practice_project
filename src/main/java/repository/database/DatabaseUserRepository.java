@@ -21,11 +21,11 @@ public class DatabaseUserRepository implements UserRepository {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
             var id = String.format("U%011d", nextUserId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM User")) {
+            try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM user")) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     User user = new User(rs.getString("userId"), rs.getString("userName"));
-                    repo.put(id, user);
+                    repo.put(rs.getString("userId"), user);
                     ++nextUserId;
                 }
             } catch (Exception e) {
@@ -48,7 +48,7 @@ public class DatabaseUserRepository implements UserRepository {
             stmt.setString(1, id);
             stmt.setString(2, userName);
             stmt.executeUpdate();
-            repo.put(id, user);
+            repo.put(user.getId(), user);
             ++nextUserId;
             return user;
         } catch (Exception e) {
