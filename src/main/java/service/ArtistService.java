@@ -52,13 +52,6 @@ public class ArtistService {
         return newTitle;
     }
 
-    public Stream listAllSongByArtist(String artistId) throws ArtistNotFoundException {
-        if (artistId == null || artistRepo.retrieve(artistId) == null) {
-            throw new ArtistNotFoundException("Can not find this artist, please try again.");
-        }
-        return songService.getSongs().filter(s -> s.getArtist().equals(artistRepo.retrieve(artistId)));
-    }
-
     public Artist getArtistById(String artistId) {
         return artistRepo.retrieve(artistId);
     }
