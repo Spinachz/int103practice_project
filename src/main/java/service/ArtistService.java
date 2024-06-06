@@ -27,6 +27,7 @@ public class ArtistService {
     }
 
     public Artist signUpArtist(String artistName) throws InvalidInputException {
+        if (artistName == null) throw new InvalidInputException();
         return artistRepo.create(artistName);
     }
 

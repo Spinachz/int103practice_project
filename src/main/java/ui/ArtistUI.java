@@ -11,6 +11,8 @@ import exception.ArtistNotFoundException;
 import exception.SongNotFoundException;
 import java.util.Scanner;
 import java.util.stream.Stream;
+
+import repository.database.DatabaseArtistRepository;
 import repository.file.FileArtistRepository;
 import repository.memory.MemoryArtistRepository;
 import service.ArtistService;
@@ -34,7 +36,7 @@ public class ArtistUI extends StartUI {
                 artistService = new ArtistService(new FileArtistRepository(), songService); //file
             }
             case 3 -> {
-                artistService = new ArtistService(new MemoryArtistRepository(), songService); //database
+                artistService = new ArtistService(new DatabaseArtistRepository(), songService); //database
             }
             default -> {
                 artistService = new ArtistService(new MemoryArtistRepository(), songService);

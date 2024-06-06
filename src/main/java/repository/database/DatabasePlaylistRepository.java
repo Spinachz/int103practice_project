@@ -17,15 +17,16 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
     private long nextPlaylistId = 1;
     Connection connect = DatabaseConnection.connect();
     private final Map<String, Playlist> repo;
+    UserRepository userRepository = new DatabaseUserRepository();
 
     public DatabasePlaylistRepository() {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
             var id = String.format("P%011d", nextPlaylistId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT playlistId, playlistName, userId, userName FROM playlist p JOIN user u ON p.ownerId = u.userId")) {
+            try (PreparedStatement stmt = connect.prepareStatement("SELECT playlistId, playlistName, userId FROM playlist")) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-                    User user = new User(rs.getString(3), rs.getString(4));
+                    User user = userRepository.retrieve(rs.getString(3));
                     Playlist playlist = new Playlist(user, rs.getString("playlistId"), rs.getString("playlistName"));
                     repo.put(rs.getString("PlaylistId"), playlist);
                     ++nextPlaylistId;
