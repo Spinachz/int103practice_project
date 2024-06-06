@@ -10,6 +10,8 @@ import exception.UserNotFoundException;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Stream;
+import repository.database.DatabasePlaylistRepository;
+import repository.database.DatabaseUserRepository;
 import repository.file.FilePlaylistRepository;
 import repository.file.FileUserRepository;
 import service.*;
@@ -29,7 +31,7 @@ public class UserUI extends StartUI {
                 userService = new UserandPlaylistService(new FileUserRepository(), new FilePlaylistRepository(), songService);
             }
             case 3 -> {
-                userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
+                userService = new UserandPlaylistService(new DatabaseUserRepository(), new DatabasePlaylistRepository(), songService);
             }
             default -> {
                 userService = new UserandPlaylistService(new MemoryUserRepository(), new MemoryPlaylistRepository(), songService);
@@ -329,13 +331,11 @@ public class UserUI extends StartUI {
                 if (selectedPlaylist != null) {
                     return selectedPlaylist;
                 } else if (input.equalsIgnoreCase("q")) {
-                    uiViewUser(sc, user);
+                    return null;
                 } else {
                     System.out.println("Can not find this playlist, please try again.");
                     System.out.println(prompt);
-                    continue;
                 }
-                break;
             }
         }
         System.out.println("Can not find your playlist, please try again.");
@@ -350,11 +350,11 @@ public class UserUI extends StartUI {
             System.out.println(ex.getMessage());
             userMainMenu(sc);
         }
-        if (selectedPlaylist == null) {
+        if (selectedPlaylist != null) {
+            viewPlaylistOrQuit(sc, selectedPlaylist, user);
+        }else{
             uiViewUser(sc, user);
-            return;
         }
-        viewPlaylistOrQuit(sc, selectedPlaylist, user);
     }
 
     private void addSongMenu(Scanner sc, User user, Playlist playlist) {
