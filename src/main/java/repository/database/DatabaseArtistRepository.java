@@ -73,4 +73,8 @@ public class DatabaseArtistRepository implements ArtistRepository {
     public Stream<Artist> stream() {
         return repo.values().stream();
     }
+
 }
+
+
+
