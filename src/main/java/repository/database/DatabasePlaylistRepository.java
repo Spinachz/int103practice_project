@@ -47,7 +47,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
         var id = String.format("P%011d", nextPlaylistId);
         if (repo.containsKey(id)) return null;
         Playlist playlist = new Playlist(owner, id, playlistName);
-        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO Playlist(playlistId, playlistName, ownerId) VALUES (?, ?, ?)")) {
+        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO playlist (playlistId, playlistName, ownerId) VALUES (?, ?, ?)")) {
             stmt.setString(1, id);
             stmt.setString(2, playlistName);
             stmt.setString(3, owner.getId());
@@ -64,7 +64,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
     @Override
     public boolean update(Playlist playlist) throws PlaylistNotFoundException {
         if (playlist == null) throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
-        try (PreparedStatement stmt = connect.prepareStatement("UPDATE Playlist SET playlistName=?")) {
+        try (PreparedStatement stmt = connect.prepareStatement("UPDATE playlist SET playlistName=?")) {
             stmt.setString(1, playlist.getPlaylistName());
             stmt.executeUpdate();
             repo.replace(playlist.getPlaylistId(), playlist);
@@ -79,7 +79,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
     public boolean delete(User owner, Playlist playlist) throws UserNotFoundException, PlaylistNotFoundException {
         if (owner == null) throw new UserNotFoundException("Can not find this user, please try again.");
         if (playlist == null) throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
-        try (PreparedStatement stmt = connect.prepareStatement("DELETE FROM Playlist WHERE playlistId=?")) {
+        try (PreparedStatement stmt = connect.prepareStatement("DELETE FROM playlist WHERE playlistId=?")) {
             stmt.setString(1, playlist.getPlaylistId());
             stmt.executeUpdate();
             return repo.remove(playlist.getPlaylistId(), playlist);

@@ -20,7 +20,7 @@ public class DatabaseSongRepository implements SongRepository {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
             var id = String.format("S%011d", nextSongId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT s.songId, s.title, s.artistId, a.artistName FROM Song s join Artist a WHERE s.artistId = a.artistId")) {
+            try (PreparedStatement stmt = connect.prepareStatement("SELECT s.songId, s.title, s.artistId, a.artistName FROM song s join artist a WHERE s.artistId = a.artistId")) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     Artist artist = new Artist(rs.getString(3), rs.getString(4));
@@ -44,7 +44,7 @@ public class DatabaseSongRepository implements SongRepository {
         var id = String.format("S%011d", nextSongId);
         if (repo.containsKey(id)) throw new InvalidInputException("Id already exsisted, please try again.");
         Song song = new Song(id, songName, artist);
-        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO Song (songId, title, artistId) VALUES (?, ?, ?)")) {
+        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO song (songId, title, artistId) VALUES (?, ?, ?)")) {
             stmt.setString(1, id);
             stmt.setString(2, songName);
             stmt.setString(3, artist.getId());
@@ -61,7 +61,7 @@ public class DatabaseSongRepository implements SongRepository {
     @Override
     public boolean update(Song song) throws SongNotFoundException {
         if (song == null) throw new SongNotFoundException("Can not find this artist, please try again.");
-        try (PreparedStatement stmt = connect.prepareStatement("UPDATE Song SET title=?")) {
+        try (PreparedStatement stmt = connect.prepareStatement("UPDATE song SET title=?")) {
             stmt.setString(1, song.getTitle());
             stmt.executeUpdate();
             repo.replace(song.getSongId(), song);
@@ -76,7 +76,7 @@ public class DatabaseSongRepository implements SongRepository {
     public boolean delete(Artist artist, Song song) throws SongNotFoundException, ArtistNotFoundException {
         if (artist == null) throw new ArtistNotFoundException("Can not find this artist, please try again.");
         if (song == null) throw new SongNotFoundException("Can not find this song, please try again.");
-        try (PreparedStatement stmt = connect.prepareStatement("DELETE FROM Song WHERE songId=?")) {
+        try (PreparedStatement stmt = connect.prepareStatement("DELETE FROM song WHERE songId=?")) {
             stmt.setString(1, song.getSongId());
             stmt.executeUpdate();
             return repo.remove(song.getSongId(), song);

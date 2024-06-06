@@ -44,7 +44,7 @@ public class DatabaseUserRepository implements UserRepository {
         var id = String.format("U%011d", nextUserId);
         if (repo.containsKey(id)) throw new InvalidInputException("Id already exsisted, please try again.");
         User user = new Artist(id, userName);
-        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO AppProjectDB.User (userId, userName) VALUES (?, ?)")) {
+        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO user (userId, userName) VALUES (?, ?)")) {
             stmt.setString(1, id);
             stmt.setString(2, userName);
             stmt.executeUpdate();
@@ -60,7 +60,7 @@ public class DatabaseUserRepository implements UserRepository {
     @Override
     public boolean update(User user) throws UserNotFoundException {
         if (user == null) throw new UserNotFoundException("Can not find this artist, please try again.");
-        try (PreparedStatement stmt = connect.prepareStatement("UPDATE User SET userName=?")) {
+        try (PreparedStatement stmt = connect.prepareStatement("UPDATE user SET userName=?")) {
             stmt.setString(1, user.getName());
             stmt.executeUpdate();
             repo.replace(user.getId(), user);
