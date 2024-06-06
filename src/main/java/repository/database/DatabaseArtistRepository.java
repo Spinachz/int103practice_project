@@ -42,8 +42,7 @@ public class DatabaseArtistRepository implements ArtistRepository {
         var id = String.format("A%011d", nextArtistId);
         if (repo.containsKey(id)) throw new InvalidInputException("Id already exsisted, please try again.");
         Artist artist = new Artist(id, artistName);
-        String sql = "INSERT INTO Artist(artistId, artistName) values (?, ?)";
-        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement("INSERT INTO Artist(artistId, artistName) values (?, ?)")) {
             stmt.setString(1, id);
             stmt.setString(2, artistName);
             stmt.executeUpdate();
@@ -59,8 +58,7 @@ public class DatabaseArtistRepository implements ArtistRepository {
     @Override
     public boolean update(Artist artist) throws ArtistNotFoundException {
         if (artist == null) throw new ArtistNotFoundException("Can not find this artist, please try again.");
-        String sql = "UPDATE Artist SET artistName=?";
-        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement("UPDATE Artist SET artistName=?")) {
             stmt.setString(1, artist.getName());
             stmt.executeUpdate();
             repo.replace(artist.getId(), artist);
