@@ -21,7 +21,7 @@ public class FileUserRepository implements UserRepository{
             try ( FileInputStream fi = new FileInputStream(f);
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
-                while (obi.read() != -1) {
+                
                     try {
                         this.nextUserId = obi.readLong();
                         this.repo = (Map<String, User>) obi.readObject();
@@ -29,9 +29,8 @@ public class FileUserRepository implements UserRepository{
                     catch (EOFException e) {
                         this.nextUserId = 1;
                         this.repo = new TreeMap<>();
-                        break;
                     }
-                }
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
