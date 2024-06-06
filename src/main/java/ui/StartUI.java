@@ -6,6 +6,8 @@ package ui;
 
 import java.io.Console;
 import java.util.Scanner;
+
+import repository.database.DatabaseSongRepository;
 import repository.file.FileSongRepository;
 import repository.memory.MemoryArtistRepository;
 import repository.memory.MemorySongRepository;
@@ -40,7 +42,7 @@ public class StartUI {
                 songService = new SongService(new FileSongRepository()); //file
             }
             case 3 -> {
-                songService = new SongService(null); //database
+                songService = new SongService(new DatabaseSongRepository()); //database
             }
             default -> {
                 songService = new SongService(new MemorySongRepository());

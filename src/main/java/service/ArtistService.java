@@ -27,7 +27,6 @@ public class ArtistService {
     }
 
     public Artist signUpArtist(String artistName) throws InvalidInputException {
-        if (artistName == null) throw new InvalidInputException();
         return artistRepo.create(artistName);
     }
 
@@ -53,12 +52,6 @@ public class ArtistService {
         return newTitle;
     }
 
-    public Stream listAllSongByArtist(String artistId) throws ArtistNotFoundException {
-        if (artistId == null || artistRepo.retrieve(artistId) == null) {
-            throw new ArtistNotFoundException("Can not find this artist, please try again.");
-        }
-        return songService.getSongs().filter(s -> s.getArtist().equals(artistRepo.retrieve(artistId)));
-    }
 
     public Artist getArtistById(String artistId) {
         return artistRepo.retrieve(artistId);
@@ -67,7 +60,7 @@ public class ArtistService {
     public Stream<Artist> getArtists(){
         return artistRepo.stream();
     }
-    
+
     public long countAllArtist(){
         return artistRepo.stream().count();
     }

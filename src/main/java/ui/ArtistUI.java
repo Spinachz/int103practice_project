@@ -11,7 +11,6 @@ import exception.ArtistNotFoundException;
 import exception.SongNotFoundException;
 import java.util.Scanner;
 import java.util.stream.Stream;
-
 import repository.database.DatabaseArtistRepository;
 import repository.file.FileArtistRepository;
 import repository.memory.MemoryArtistRepository;
@@ -170,12 +169,8 @@ public class ArtistUI extends StartUI {
         }
         System.out.println("Your total song: " + totalSong);
         if (totalSong != 0) {
-            try {
-                artistService.listAllSongByArtist(artist.getId()).forEach(System.out::println);
-            } catch (ArtistNotFoundException ex) {
-                System.out.println(ex.getMessage());
-                return;
-            }
+            System.out.println("Your song:");
+            songService.searchSongByArtistId(artist.getId()).forEach(System.out::println);
         }
         uiSongMenu(sc, artist, totalSong);
     }
@@ -329,13 +324,8 @@ public class ArtistUI extends StartUI {
     }
 
     private Song selectSong(Scanner sc, Artist artist) throws ArtistNotFoundException {
-        Stream songs = null;
-        try {
-            songs = artistService.listAllSongByArtist(artist.getId());
-        } catch (ArtistNotFoundException ex) {
-            System.out.println(ex.getMessage());
-            return null;
-        }
+        Stream songs = songService.searchSongByArtistId(artist.getId());
+        ;
         if (artistService.countAllSongById(artist.getId()) != 0) {
             songs.forEach(System.out::println);
             String prompt = """
@@ -349,13 +339,12 @@ public class ArtistUI extends StartUI {
                 if (selectedSong != null) {
                     return selectedSong;
                 } else if (input.equalsIgnoreCase("q")) {
-                    uiViewArtist(sc, artist);
+                    return null;
                 } else {
                     System.out.println("Can not find this song, please try again.");
                     System.out.println(prompt);
-                    continue;
                 }
-                break;
+
             }
         }
         System.out.println("Can not find your song, please try again.");
@@ -366,15 +355,15 @@ public class ArtistUI extends StartUI {
         Song selectedSong = null;
         try {
             selectedSong = selectSong(sc, artist);
+
         } catch (ArtistNotFoundException ex) {
             System.out.println(ex.getMessage());
-            return;
         }
-        if (selectedSong == null) {
+        if (selectedSong != null) {
+            viewSongOrQuit(sc, selectedSong, artist);
+        }else{
             uiViewArtist(sc, artist);
-            return;
         }
-        viewSongOrQuit(sc, selectedSong, artist);
     }
 
 }

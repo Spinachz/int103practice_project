@@ -2,11 +2,9 @@ package repository.database;
 
 import domain.Artist;
 import domain.User;
-import exception.ArtistNotFoundException;
 import exception.InvalidInputException;
 import exception.UserNotFoundException;
 import repository.UserRepository;
-
 import java.sql.*;
 import java.util.Map;
 import java.util.TreeMap;
@@ -20,17 +18,7 @@ public class DatabaseUserRepository implements UserRepository {
     public DatabaseUserRepository() {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
-            var id = String.format("U%011d", nextUserId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM user")) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    User user = new User(rs.getString("userId"), rs.getString("userName"));
-                    repo.put(rs.getString("userId"), user);
-                    ++nextUserId;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            loadDB();
         }
     }
 
@@ -74,5 +62,20 @@ public class DatabaseUserRepository implements UserRepository {
     @Override
     public Stream<User> stream() {
         return repo.values().stream();
+    }
+
+    private boolean loadDB() {
+        try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM user")) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User user = new User(rs.getString("userId"), rs.getString("userName"));
+                repo.put(rs.getString("userId"), user);
+                ++nextUserId;
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
