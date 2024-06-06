@@ -94,11 +94,11 @@ public class UserandPlaylistService {
         playlistRepo.update(playlist);
         return song;
     }
-    
+
     public Stream<User> getAllUsers(){
         return userRepo.stream();
     }
-    
+
     public long countUsers(){
         return userRepo.stream().count();
     }
@@ -110,5 +110,4 @@ public class UserandPlaylistService {
     public Playlist getPlaylistById(String playlistId) {
         return playlistRepo.retrieve(playlistId);
     }
-
 }

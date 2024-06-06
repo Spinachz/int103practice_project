@@ -18,17 +18,7 @@ public class DatabaseArtistRepository implements ArtistRepository {
     public DatabaseArtistRepository() {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
-            var id = String.format("A%011d", nextArtistId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM artist")) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    Artist artist = new Artist(rs.getString(1), rs.getString(2));
-                    repo.put(rs.getString("artistId"), artist);
-                    ++nextArtistId;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            loadDB();
         }
     }
 
@@ -74,7 +64,18 @@ public class DatabaseArtistRepository implements ArtistRepository {
         return repo.values().stream();
     }
 
+    private boolean loadDB() {
+        try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM artist")) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Artist artist = new Artist(rs.getString(1), rs.getString(2));
+                repo.put(rs.getString("artistId"), artist);
+                ++nextArtistId;
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
-
-
-

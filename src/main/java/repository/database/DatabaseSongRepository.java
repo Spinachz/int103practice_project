@@ -21,18 +21,7 @@ public class DatabaseSongRepository implements SongRepository {
         this.repo = new TreeMap<>();
         this.artistRepository = new DatabaseArtistRepository();
         if (repo.isEmpty()) {
-            var id = String.format("S%011d", nextSongId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT songId, title, artistId FROM song")) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    Artist artist = artistRepository.retrieve(rs.getString(3));
-                    Song song = new Song(rs.getString(1), rs.getString(2), artist);
-                    repo.put(rs.getString("songId"), song);
-                    ++nextSongId;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            loadDB();
         }
     }
 
@@ -63,8 +52,9 @@ public class DatabaseSongRepository implements SongRepository {
     @Override
     public boolean update(Song song) throws SongNotFoundException {
         if (song == null) throw new SongNotFoundException("Can not find this artist, please try again.");
-        try (PreparedStatement stmt = connect.prepareStatement("UPDATE song SET title=?")) {
+        try (PreparedStatement stmt = connect.prepareStatement("UPDATE song SET title=? WHERE songId=?")) {
             stmt.setString(1, song.getTitle());
+            stmt.setString(2, song.getSongId());
             stmt.executeUpdate();
             repo.replace(song.getSongId(), song);
             return true;
@@ -91,5 +81,21 @@ public class DatabaseSongRepository implements SongRepository {
     @Override
     public Stream<Song> stream() {
         return repo.values().stream();
+    }
+
+    private boolean loadDB() {
+        try (PreparedStatement stmt = connect.prepareStatement("SELECT songId, title, artistId FROM song")) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Artist artist = artistRepository.retrieve(rs.getString(3));
+                Song song = new Song(rs.getString(1), rs.getString(2), artist);
+                repo.put(rs.getString("songId"), song);
+                ++nextSongId;
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

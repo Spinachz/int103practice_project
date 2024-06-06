@@ -170,7 +170,7 @@ public class ArtistUI extends StartUI {
         System.out.println("Your total song: " + totalSong);
         if (totalSong != 0) {
             System.out.println("Your song:");
-            songService.searhSongByArtist(artist.getName()).forEach(System.out::println);
+            songService.searchSongByArtistId(artist.getId()).forEach(System.out::println);
         }
         uiSongMenu(sc, artist, totalSong);
     }
@@ -324,7 +324,8 @@ public class ArtistUI extends StartUI {
     }
 
     private Song selectSong(Scanner sc, Artist artist) throws ArtistNotFoundException {
-        Stream songs = songService.searhSongByArtist(artist.getName());
+        Stream songs = songService.searchSongByArtistId(artist.getId());
+        ;
         if (artistService.countAllSongById(artist.getId()) != 0) {
             songs.forEach(System.out::println);
             String prompt = """

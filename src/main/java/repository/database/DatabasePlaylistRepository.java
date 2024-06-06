@@ -22,18 +22,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
     public DatabasePlaylistRepository() {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
-            var id = String.format("P%011d", nextPlaylistId);
-            try (PreparedStatement stmt = connect.prepareStatement("SELECT playlistId, playlistName, userId FROM playlist")) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    User user = userRepository.retrieve(rs.getString(3));
-                    Playlist playlist = new Playlist(user, rs.getString("playlistId"), rs.getString("playlistName"));
-                    repo.put(rs.getString("PlaylistId"), playlist);
-                    ++nextPlaylistId;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            loadDB();
         }
     }
 
@@ -93,5 +82,21 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
     @Override
     public Stream<Playlist> stream() {
         return repo.values().stream();
+    }
+
+    private boolean loadDB() {
+        try (PreparedStatement stmt = connect.prepareStatement("SELECT playlistId, playlistName, ownerId FROM playlist")) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User user = userRepository.retrieve(rs.getString(3));
+                Playlist playlist = new Playlist(user, rs.getString("playlistId"), rs.getString("playlistName"));
+                repo.put(rs.getString("PlaylistId"), playlist);
+                ++nextPlaylistId;
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
