@@ -1,101 +1,81 @@
 package repository.file;
 
-import domain.Playlist;
-import domain.User;
+import domain.Artist;
 import java.io.*;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
+import exception.ArtistNotFoundException;
 import exception.InvalidInputException;
-import exception.PlaylistNotFoundException;
-import exception.UserNotFoundException;
-import repository.PlaylistRepository;
+import repository.ArtistRepository;
 
-public class FilePlaylistRepository implements PlaylistRepository{
-    private String filename = "playlist.dat";
-    private long nextPlaylistId;
-    private Map<String, Playlist> repo;
+public class FileArtistRepository implements ArtistRepository {
+
+    private String filename = "artist.dat";
+    private long nextArtistId;
+    private Map<String, Artist> repo;
     private File f = new File(filename);
 
-    public FilePlaylistRepository() {
+    public FileArtistRepository() {
         if (f.exists()) {
-            try ( FileInputStream fi = new FileInputStream(f);
-                  BufferedInputStream bfi = new BufferedInputStream(fi);
-                  ObjectInputStream obi = new ObjectInputStream(bfi);) {
-                while (obi.read() != -1) {
+            try (FileInputStream fi = new FileInputStream(f); 
+                    BufferedInputStream bfi = new BufferedInputStream(fi); 
+                    ObjectInputStream obi = new ObjectInputStream(bfi);) {
                 try {
-                    this.nextPlaylistId = obi.readLong();
-                    this.repo = (Map<String, Playlist>) obi.readObject();
-                }
-                catch (EOFException e) {
-                    this.nextPlaylistId = 1;
+                    this.nextArtistId = obi.readLong();
+                    this.repo = (Map<String, Artist>) obi.readObject();
+                } catch (EOFException e) {
+                    e.printStackTrace();
+                    this.nextArtistId = 1;
                     this.repo = new TreeMap<>();
-                    break;
                 }
-            }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            this.nextPlaylistId = 1;
+            this.nextArtistId = 1;
             this.repo = new TreeMap<>();
         }
     }
 
     @Override
-    public Playlist retrieve(String playlistId) {
-        return repo.get(playlistId);
+    public Artist retrieve(String artistId) {
+        return repo.get(artistId);
     }
 
     @Override
-    public Playlist create(User owner, String playlistName) throws InvalidInputException,  UserNotFoundException {
-        if (owner == null) {
-            throw new UserNotFoundException("Can not find this user, please try again.");
-        }
-        String id = String.format("P%011d", nextPlaylistId);
+    public Artist create(String artistName) throws InvalidInputException {
+        var id = String.format("A%011d", nextArtistId);
         if (repo.containsKey(id)) {
-            return null;
+            throw new InvalidInputException("Id already exsisted, please try again.");
         }
-        Playlist playlist = new Playlist(owner, id, playlistName);
-        repo.put(id, playlist);
-        ++nextPlaylistId;
+        Artist artist = new Artist(id, artistName);
+        repo.put(id, artist);
+        ++nextArtistId;
         saveRepo();
-        return playlist;
+        return artist;
     }
 
     @Override
-    public boolean delete(User owner, Playlist playlist) throws UserNotFoundException, PlaylistNotFoundException {
-        if (owner == null) {
-            throw new UserNotFoundException("Can not find this user, please try again.");
+    public boolean update(Artist artist) throws ArtistNotFoundException {
+        if (artist == null) {
+            throw new ArtistNotFoundException("Can not find this artist, please try again.");
         }
-        if (playlist == null) {
-            throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
-        }
-        saveRepo();
-        return repo.remove(playlist.getPlaylistId(), playlist);
-    }
-
-    @Override
-    public boolean update(Playlist playlist) throws PlaylistNotFoundException {
-        if (playlist == null) {
-            throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
-        }
-        repo.replace(playlist.getPlaylistId(), playlist);
+        repo.replace(artist.getId(), artist);
         saveRepo();
         return true;
     }
 
     @Override
-    public Stream<Playlist> stream() {
+    public Stream<Artist> stream() {
         return repo.values().stream();
     }
 
     private void saveRepo() {
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
-            obi.writeLong(nextPlaylistId);
+        try (FileOutputStream fi = new FileOutputStream(f); BufferedOutputStream bfi = new BufferedOutputStream(fi); ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
+            obi.writeLong(nextArtistId);
             obi.writeObject(repo);
         } catch (Exception e) {
             e.printStackTrace();
