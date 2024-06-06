@@ -6,6 +6,7 @@ package ui;
 
 import java.io.Console;
 import java.util.Scanner;
+import repository.database.DatabaseSongRepository;
 import repository.file.FileSongRepository;
 import repository.memory.MemoryArtistRepository;
 import repository.memory.MemorySongRepository;
@@ -40,7 +41,7 @@ public class StartUI {
                 songService = new SongService(new FileSongRepository()); //file
             }
             case 3 -> {
-                songService = new SongService(null); //database
+                songService = new SongService(new DatabaseSongRepository()); //database
             }
             default -> {
                 songService = new SongService(new MemorySongRepository());
@@ -92,7 +93,7 @@ public class StartUI {
         String prompt = """
                     Hello, welcome to our application. Please select Data managing method:
                         1. In memory
-                        2. In file(under maintainance)
+                        2. In file
                         3. In database(under maintainance)
                     Press [1|2|3]: """;
         System.out.print(prompt);
