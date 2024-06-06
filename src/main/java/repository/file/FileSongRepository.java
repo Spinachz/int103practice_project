@@ -23,7 +23,7 @@ public class FileSongRepository implements SongRepository {
             try ( FileInputStream fi = new FileInputStream(f);
                   BufferedInputStream bfi = new BufferedInputStream(fi);
                   ObjectInputStream obi = new ObjectInputStream(bfi);) {
-                while (obi.read() != -1) {
+               
                     try {
                         this.nextSongId = obi.readLong();
                         this.repo = (Map<String, Song>) obi.readObject();
@@ -31,9 +31,9 @@ public class FileSongRepository implements SongRepository {
                     catch (EOFException e) {
                         this.nextSongId = 1;
                         this.repo = new TreeMap<>();
-                        break;
+                        
                     }
-                }
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -72,8 +72,9 @@ public class FileSongRepository implements SongRepository {
         if (song == null) {
             throw new SongNotFoundException("Can not find this song, please try again.");
         }
+        boolean removeStatus = repo.remove(song.getSongId(), song);
         saveRepo();
-        return repo.remove(song.getSongId(), song);
+        return removeStatus;
     }
 
     @Override

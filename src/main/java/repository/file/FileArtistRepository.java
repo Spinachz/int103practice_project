@@ -10,7 +10,8 @@ import exception.ArtistNotFoundException;
 import exception.InvalidInputException;
 import repository.ArtistRepository;
 
-public class FileArtistRepository implements ArtistRepository{
+public class FileArtistRepository implements ArtistRepository {
+
     private String filename = "artist.dat";
     private long nextArtistId;
     private Map<String, Artist> repo;
@@ -18,22 +19,19 @@ public class FileArtistRepository implements ArtistRepository{
 
     public FileArtistRepository() {
         if (f.exists()) {
-            try ( FileInputStream fi = new FileInputStream(f);
-                  BufferedInputStream bfi = new BufferedInputStream(fi);
-                  ObjectInputStream obi = new ObjectInputStream(bfi);) {
-                while (obi.read() != -1) {
-                    try {
-                        this.nextArtistId = obi.readLong();
-                        this.repo = (Map<String, Artist>) obi.readObject();
-                    }
-                    catch (EOFException e) {
-                        this.nextArtistId = 1;
-                        this.repo = new TreeMap<>();
-                        break;
-                    }
+            try (FileInputStream fi = new FileInputStream(f); 
+                    BufferedInputStream bfi = new BufferedInputStream(fi); 
+                    ObjectInputStream obi = new ObjectInputStream(bfi);) {
+                try {
+                    this.nextArtistId = obi.readLong();
+                    this.repo = (Map<String, Artist>) obi.readObject();
+                } catch (EOFException e) {
+                    e.printStackTrace();
+                    this.nextArtistId = 1;
+                    this.repo = new TreeMap<>();
                 }
-            }
-            catch (Exception e) {
+
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
@@ -76,9 +74,7 @@ public class FileArtistRepository implements ArtistRepository{
     }
 
     private void saveRepo() {
-        try ( FileOutputStream fi = new FileOutputStream(f);
-              BufferedOutputStream bfi = new BufferedOutputStream(fi);
-              ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
+        try (FileOutputStream fi = new FileOutputStream(f); BufferedOutputStream bfi = new BufferedOutputStream(fi); ObjectOutputStream obi = new ObjectOutputStream(bfi);) {
             obi.writeLong(nextArtistId);
             obi.writeObject(repo);
         } catch (Exception e) {
