@@ -15,19 +15,17 @@ import java.util.stream.Stream;
 
 public class DatabasePlaylistRepository implements PlaylistRepository {
     private long nextPlaylistId = 1;
-    String url = "jdbc:mysql://localhost:3306/AppProjectDB";
-    String username = "root";
-    String password = "Butter#2371";
+    Connection connect = DatabaseConnection.connect();
     private final Map<String, Playlist> repo;
     UserRepository userRepository;
 
     public DatabasePlaylistRepository() {
         this.repo = new TreeMap<>();
+        this.userRepository = new DatabaseUserRepository();
         if (repo.isEmpty()) {
             var id = String.format("P%011d", nextPlaylistId);
             String sql = "SELECT * FROM Playlist";
-            try (Connection connect = DriverManager.getConnection(url, username, password);
-                 PreparedStatement stmt = connect.prepareStatement(sql)) {
+            try (PreparedStatement stmt = connect.prepareStatement(sql)) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     User user = userRepository.retrieve(rs.getString("ownerId"));
@@ -53,8 +51,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
         if (repo.containsKey(id)) return null;
         Playlist playlist = new Playlist(owner, id, playlistName);
         String sql = "INSERT INTO Playlist(playlistId, playlistName, ownerId) VALUES (?, ?, ?)";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, id);
             stmt.setString(2, playlistName);
             stmt.setString(3, owner.getId());
@@ -72,8 +69,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
     public boolean update(Playlist playlist) throws PlaylistNotFoundException {
         if (playlist == null) throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
         String sql = "UPDATE Playlist SET playlistName=?";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, playlist.getPlaylistName());
             stmt.executeUpdate();
             repo.replace(playlist.getPlaylistId(), playlist);
@@ -89,8 +85,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
         if (owner == null) throw new UserNotFoundException("Can not find this user, please try again.");
         if (playlist == null) throw new PlaylistNotFoundException("Can not find this playlist, please try again.");
         String sql = "DELETE FROM Playlist WHERE playlistId=?";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, playlist.getPlaylistId());
             stmt.executeUpdate();
             return repo.remove(playlist.getPlaylistId(), playlist);

@@ -12,18 +12,14 @@ import java.util.stream.Stream;
 
 public class DatabaseArtistRepository implements ArtistRepository {
     private long nextArtistId = 1 ;
-    String url = "jdbc:mysql://localhost:3306/AppProjectDB";
-    String username = "root";
-    String password = "Butter#2371";
-
     private final Map<String, Artist> repo;
+    Connection connect = DatabaseConnection.connect();
 
     public DatabaseArtistRepository() {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
             var id = String.format("A%011d", nextArtistId);
-            try (Connection connect = DriverManager.getConnection(url, username, password);
-                 PreparedStatement stmt = connect.prepareStatement("SELECT * FROM Artist")) {
+            try (PreparedStatement stmt = connect.prepareStatement("SELECT * FROM Artist")) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     Artist artist = new Artist(rs.getString("artistId"), rs.getString("artistName"));
@@ -47,8 +43,7 @@ public class DatabaseArtistRepository implements ArtistRepository {
         if (repo.containsKey(id)) throw new InvalidInputException("Id already exsisted, please try again.");
         Artist artist = new Artist(id, artistName);
         String sql = "INSERT INTO Artist(artistId, artistName) values (?, ?)";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, id);
             stmt.setString(2, artistName);
             stmt.executeUpdate();
@@ -65,8 +60,7 @@ public class DatabaseArtistRepository implements ArtistRepository {
     public boolean update(Artist artist) throws ArtistNotFoundException {
         if (artist == null) throw new ArtistNotFoundException("Can not find this artist, please try again.");
         String sql = "UPDATE Artist SET artistName=?";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, artist.getName());
             stmt.executeUpdate();
             repo.replace(artist.getId(), artist);

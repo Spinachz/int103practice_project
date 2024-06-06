@@ -3,29 +3,36 @@ package repository.database;
 import domain.Artist;
 import domain.Song;
 import exception.*;
+import repository.ArtistRepository;
 import repository.SongRepository;
+import service.ArtistService;
+
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Stream;
 
 public class DatabaseSongRepository implements SongRepository {
     private long nextSongId = 1;
-    String url = "jdbc:mysql://localhost:3306/AppProjectDB";
-    String username = "root";
-    String password = "Butter#2371";
+    Connection connect = DatabaseConnection.connect();
     private final Map<String, Song> repo;
+    ArtistRepository artistRepository;
 
     public DatabaseSongRepository() {
         this.repo = new TreeMap<>();
+        this.artistRepository = new DatabaseArtistRepository();
         if (repo.isEmpty()) {
             var id = String.format("S%011d", nextSongId);
             String sql = "SELECT s.songId, s.title, s.artistId, a.artistName FROM Song s join Artist a WHERE s.artistId = a.artistId";
-            try (Connection connect = DriverManager.getConnection(url, username, password);
-                 PreparedStatement stmt = connect.prepareStatement(sql)) {
+            try (PreparedStatement stmt = connect.prepareStatement(sql)) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-                    Artist artist = new Artist(rs.getString(3), rs.getString(4));
-                    Song song = new Song(rs.getString("songId"), rs.getString("title"), artist);
+//                    Artist artist = artistRepository.retrieve(rs.getString(3));
+                    String artistId = rs.getString(3);
+                    String artistName = rs.getString(4);
+                    String songId = rs.getString(1);
+                    String title = rs.getString("title");
+                    Artist artist = new Artist(artistId, artistName);
+                    Song song = new Song(songId, title, artist);
                     repo.put(id, song);
                     ++nextSongId;
                 }
@@ -45,9 +52,8 @@ public class DatabaseSongRepository implements SongRepository {
         var id = String.format("S%011d", nextSongId);
         if (repo.containsKey(id)) throw new InvalidInputException("Id already exsisted, please try again.");
         Song song = new Song(id, songName, artist);
-        String sql = "INSERT INTO Song(songId, songName, artistId) values (?, ?, ?)";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        String sql = "INSERT INTO Song (songId, title, artistId) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, id);
             stmt.setString(2, songName);
             stmt.setString(3, artist.getId());
@@ -64,9 +70,8 @@ public class DatabaseSongRepository implements SongRepository {
     @Override
     public boolean update(Song song) throws SongNotFoundException {
         if (song == null) throw new SongNotFoundException("Can not find this artist, please try again.");
-        String sql = "UPDATE Song SET songName=?";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        String sql = "UPDATE Song SET title=?";
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, song.getTitle());
             stmt.executeUpdate();
             repo.replace(song.getSongId(), song);
@@ -82,8 +87,7 @@ public class DatabaseSongRepository implements SongRepository {
         if (artist == null) throw new ArtistNotFoundException("Can not find this artist, please try again.");
         if (song == null) throw new SongNotFoundException("Can not find this song, please try again.");
         String sql = "DELETE FROM Song WHERE songId=?";
-        try (Connection connect = DriverManager.getConnection(url);
-             PreparedStatement stmt = connect.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, song.getSongId());
             stmt.executeUpdate();
             return repo.remove(song.getSongId(), song);
