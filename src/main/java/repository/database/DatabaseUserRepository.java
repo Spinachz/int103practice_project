@@ -18,6 +18,8 @@ import java.util.stream.Stream;
 public class DatabaseUserRepository implements UserRepository {
     private long nextUserId = 1;
     String url = "jdbc:mysql://localhost:3306/AppProjectDB";
+    String username = "root";
+    String password = "Butter#2371";
     private final Map<String, User> repo;
 
     public DatabaseUserRepository() {
@@ -25,7 +27,7 @@ public class DatabaseUserRepository implements UserRepository {
         if (repo.isEmpty()) {
             var id = String.format("U%011d", nextUserId);
             String sql = "SELECT * FROM User";
-            try (Connection connect = DriverManager.getConnection(url);
+            try (Connection connect = DriverManager.getConnection(url, username, password);
                  PreparedStatement stmt = connect.prepareStatement(sql)) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
@@ -49,7 +51,7 @@ public class DatabaseUserRepository implements UserRepository {
         var id = String.format("U%011d", nextUserId);
         if (repo.containsKey(id)) throw new InvalidInputException("Id already exsisted, please try again.");
         User user = new Artist(id, userName);
-        String sql = "INSERT INTO User(userId, userName) values (?, ?)";
+        String sql = "INSERT INTO AppProjectDB.User(userId, userName) values (?, ?)";
         try (Connection connect = DriverManager.getConnection(url);
              PreparedStatement stmt = connect.prepareStatement(sql)) {
             stmt.setString(1, id);

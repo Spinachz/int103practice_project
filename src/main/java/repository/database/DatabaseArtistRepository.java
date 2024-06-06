@@ -13,6 +13,8 @@ import java.util.stream.Stream;
 public class DatabaseArtistRepository implements ArtistRepository {
     private long nextArtistId = 1 ;
     String url = "jdbc:mysql://localhost:3306/AppProjectDB";
+    String username = "root";
+    String password = "Butter#2371";
 
     private final Map<String, Artist> repo;
 
@@ -20,7 +22,7 @@ public class DatabaseArtistRepository implements ArtistRepository {
         this.repo = new TreeMap<>();
         if (repo.isEmpty()) {
             var id = String.format("A%011d", nextArtistId);
-            try (Connection connect = DriverManager.getConnection(url);
+            try (Connection connect = DriverManager.getConnection(url, username, password);
                  PreparedStatement stmt = connect.prepareStatement("SELECT * FROM Artist")) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {

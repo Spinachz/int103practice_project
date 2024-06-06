@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 public class DatabasePlaylistRepository implements PlaylistRepository {
     private long nextPlaylistId = 1;
     String url = "jdbc:mysql://localhost:3306/AppProjectDB";
+    String username = "root";
+    String password = "Butter#2371";
     private final Map<String, Playlist> repo;
     UserRepository userRepository;
 
@@ -24,7 +26,7 @@ public class DatabasePlaylistRepository implements PlaylistRepository {
         if (repo.isEmpty()) {
             var id = String.format("P%011d", nextPlaylistId);
             String sql = "SELECT * FROM Playlist";
-            try (Connection connect = DriverManager.getConnection(url);
+            try (Connection connect = DriverManager.getConnection(url, username, password);
                  PreparedStatement stmt = connect.prepareStatement(sql)) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {

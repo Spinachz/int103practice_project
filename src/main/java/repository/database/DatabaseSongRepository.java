@@ -12,21 +12,24 @@ import java.util.stream.Stream;
 public class DatabaseSongRepository implements SongRepository {
     private long nextSongId = 1;
     String url = "jdbc:mysql://localhost:3306/AppProjectDB";
-
+    String username = "root";
+    String password = "Butter#2371";
     private final Map<String, Song> repo;
-    public ArtistRepository repository;
+    public ArtistRepository artistRepository;
 
     public DatabaseSongRepository() {
         this.repo = new TreeMap<>();
+        this.artistRepository = new DatabaseArtistRepository();
         if (repo.isEmpty()) {
             var id = String.format("S%011d", nextSongId);
-            String sql = "SELECT songId, songName, artistId FROM Song";
-            try (Connection connect = DriverManager.getConnection(url);
+            String sql = "SELECT s.songId, s.title, s.artistId, a.artistName FROM Song s join Artist a WHERE s.artistId = a.artistId";
+            try (Connection connect = DriverManager.getConnection(url, username, password);
                  PreparedStatement stmt = connect.prepareStatement(sql)) {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
-                    Artist artist = repository.retrieve(rs.getString("artistId"));
-                    Song song = new Song(rs.getString("songId"), rs.getString("songName"), artist);
+//                    Artist artist = artistRepository.retrieve(rs.getString(3));
+                    Artist artist = new Artist(rs.getString(3), rs.getString(4));
+                    Song song = new Song(rs.getString("songId"), rs.getString("title"), artist);
                     repo.put(id, song);
                     ++nextSongId;
                 }
